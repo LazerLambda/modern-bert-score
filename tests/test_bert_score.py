@@ -10,7 +10,7 @@ from modern_bert_score.inference import VLLM_AVAILABLE
 # Suppress transformers warnings about missing weights during testing
 transformers_logging.set_verbosity_error()
 
-TEST_MODEL= "models/BERT-Tiny-vllm"
+TEST_MODEL= "LazerLambda/BERT-Tiny-L-2-H-128-A-2-ModBERTScore-TEST"
 
 class TestBertScore(unittest.TestCase):
 
@@ -209,6 +209,31 @@ class TestBertScore(unittest.TestCase):
         self.assertIn("vLLM is not installed", str(cm.exception))
         self.assertIn("pip install 'modern-bert-score[vllm]'", str(cm.exception))
 
+    @patch("modern_bert_score.inference.LLM")
+    @patch("modern_bert_score.inference.VLLM_AVAILABLE", True)
+    @patch("modern_bert_score.bert_score.AutoTokenizer")
+    def test_initialization_vllm_masked_lm_error(self, mock_tokenizer, mock_llm):
+        """Test that appropriate error is raised when vLLM rejects MaskedLM architecture.
+
+        This test uses mocks for vLLM components, so it will run (and pass) regardless
+        of whether the `vllm` package is installed in the test environment.
+        """
+        mock_tokenizer.from_pretrained.return_value = MagicMock()
+
+        # Simulate vLLM raising exception about architecture
+        mock_llm.side_effect = Exception(
+            "ValueError: Model architectures ['ModernBertForMaskedLM'] are not supported for now. "
+            "Supported architectures: ['ModernBertModel', ...]"
+        )
+
+        with self.assertRaises(RuntimeError) as cm:
+            BertScore(model_id=self.test_model, backend="vllm")
+
+        self.assertIn(
+            "vLLM does not accept the masked-LM ModernBERT checkpoint directly",
+            str(cm.exception),
+        )
+
     @patch("modern_bert_score.bert_score.AutoTokenizer")
     def test_initialization_invalid_backend(self, mock_tokenizer):
         """Test initialization with invalid backend raises ValueError."""
@@ -258,7 +283,7 @@ def vllm_bert_score():
     bs = BertScore(
         model_id=TEST_MODEL, 
         backend="vllm", 
-        vllm_args={"gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp"}
+        vllm_args={"gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp", "task": "embed"}
     )
     return bs
 
@@ -277,27 +302,6 @@ def test_vllm_only_feature(vllm_bert_score):
     assert p_r_f1[0][1] == 1.0
     assert p_r_f1[0][2] == 1.0
 
-
-@pytest.fixture(scope="module")
-def vllm_bert_score():
-    # This setup runs once for the module
-    bs = BertScore(
-        model_id=TEST_MODEL, 
-        backend="vllm", 
-        vllm_args={"task": "embed"}
-    )
-    return bs
-
-@pytest.mark.skipif(not VLLM_AVAILABLE, reason="vLLM not installed")
-def test_vllm_wrong_init(vllm_bert_score):
-    """Test that requests the fixture above."""
-    cand1 = ["Hello World!"]
-    ref1 = ["Hello World!"]
+    # Test kwargs passed to vLLMInference
+    # kwargs = {"task": "embed", "gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp"}
     
-    # Use the fixture passed as an argument
-    p_r_f1 = vllm_bert_score(cand1, ref1)
-    
-    # Use standard asserts instead of self.assertEqual
-    assert p_r_f1[0][0] == 1.0
-    assert p_r_f1[0][1] == 1.0
-    assert p_r_f1[0][2] == 1.0
