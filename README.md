@@ -1,4 +1,4 @@
-# BERTScore for the Inference Era
+# Modern BERTScore for Fast Inference
 
 ![Performance](runtime_comp_nvidia_rtx_4060.png)
 
