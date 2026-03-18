@@ -1,6 +1,6 @@
 # BERTScore for the Inference Era
 
-![BERTScore](zhang_19_figure_1.png)
+![Performance](runtime_comp_nvidia_rtx_4060.png)
 
 **Modern-BERT-Score** is a reimplementation of the BERTScore metric introduced by [Zhang et al., 2019](https://arxiv.org/abs/1904.09675), optimized for modern inference workflows using [SentenceTransformers](https://www.sbert.net/) and [vLLM](https://vllm.ai/).  
 
@@ -31,23 +31,30 @@ pip install modern-bert-score[vllm]
 ```
 This implementation is significantly faster than the original BERTScore, especially with GPU acceleration.
 
-![Performance](runtime_comp_nvidia_rtx_4060.png)
-
 ## 🛠 Usage
 ### Example
-```{bash}
+```python
 from modern_bert_score import BertScore
 
 candidates = ["Hello World!", "A robin is a bird."]
 references = ["Hi World!", "A robin is not a bird."]
 
 metric = BertScore(model_id="roberta-base")
-P, R, F1 = metric.score(candidates, references)
+scores = metric(candidates, references)
 
-print("Precision:", P)
-print("Recall:", R)
-print("F1:", F1)
+# scores is a list of (Precision, Recall, F1) tuples
+# To get separate lists of P, R, F1:
+P, R, F1 = zip(*scores)
+
+print("Precision scores:", P)
+print("Recall scores:", R)
+print("F1 scores:", F1)
 ```
+
+## BERTScore
+BERTScore ([Zhang et al., 2019](https://arxiv.org/abs/1904.09675)) evaluates the similarity between candidate and reference texts by comparing their contextual embeddings from a pre-trained transformer model. For each token in the candidate, it finds the most similar token in the reference (using cosine similarity) and aggregates these scores to compute precision, recall, and F1. Optionally, IDF-weighting can be applied to give more importance to rare and informative words, improving the metric’s sensitivity to meaningful content rather than common words. This approach captures semantic similarity beyond exact word matches, making it robust for tasks like machine translation and text generation evaluation. The following figure, taken from the original paper, illustrates how BERTScore works:
+
+![BERTScore](zhang_19_figure_1.png)
 
 ## ⚠️ NOTICE
 
