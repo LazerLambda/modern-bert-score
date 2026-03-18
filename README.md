@@ -58,13 +58,13 @@ print("F1 scores:", F1)
 - For best performance, an optimal layer should be used for each model.  
 - To find the optimal layer, [please use this script from the original BERTScore implementation](https://github.com/Tiiiger/bert_score/tree/master/tune_layers).  
 
-Some pre-truncated models optimized for vLLM are available on [Hugging Face](https://huggingface.co/collections/LazerLambda/modern-bertscore):
+Some pre-truncated models optimized for vLLM are available on [Hugging Face](https://huggingface.co/collections/LazerLambda/modern-bertscore) and directly available in this library:
 
-- `LazerLambda/ModernBERT-base-ModBERTScore-12`  
-- `LazerLambda/ModernBERT-large-ModBERTScore-19`  
-- `LazerLambda/roberta-large-ModBERTScore-17`  
-- `LazerLambda/roberta-base-ModBERTScore-10`  
-- `LazerLambda/roberta-large-mnli-ModBERTScore-19`
+- `LazerLambda/ModernBERT-base-ModBERTScore-12` -> `ModernBERTBaseScore`
+- `LazerLambda/ModernBERT-large-ModBERTScore-19` -> `ModernBERTLargeScore` 
+- `LazerLambda/roberta-base-ModBERTScore-10`  -> `RobertaBaseScore`
+- `LazerLambda/roberta-large-ModBERTScore-17` -> `RobertaLargeScore`
+- `LazerLambda/roberta-large-mnli-ModBERTScore-19` -> `RobertaLargeMNLIScore`
 
 
 ## 🗺 Roadmap
