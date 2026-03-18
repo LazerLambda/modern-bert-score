@@ -255,3 +255,28 @@ class BertScore:
             }
         )
         return idf_dict, collected_input_ids
+
+ModernBERTBaseScore = partial(
+    BertScore, model_id="LazerLambda/ModernBERT-base-ModBERTScore-12"
+)
+ModernBERTBaseScore.__doc__ = "BertScore with ModernBERT-base-ModBERTScore-12"
+
+ModernBERTLargeScore = partial(
+    BertScore, model_id="LazerLambda/ModernBERT-large-ModBERTScore-19"
+)
+ModernBERTLargeScore.__doc__ = "BertScore with ModernBERT-large-ModBERTScore-19"
+
+RobertaBaseScore = partial(
+    BertScore, model_id="LazerLambda/roberta-base-ModBERTScore-10"
+)
+RobertaBaseScore.__doc__ = "BertScore with roberta-base-ModBERTScore-10"
+
+RobertaLargeScore = partial(
+    BertScore, model_id="LazerLambda/roberta-large-ModBERTScore-17"
+)
+RobertaLargeScore.__doc__ = "BertScore with roberta-large-ModBERTScore-17"
+
+RobertaLargeMNLI_Score = partial(
+    BertScore, model_id="LazerLambda/roberta-large-mnli-ModBERTScore-19"
+)
+RobertaLargeMNLI_Score.__doc__ = "BertScore with roberta-large-mnli-ModBERTScore-19"

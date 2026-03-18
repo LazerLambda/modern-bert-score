@@ -78,11 +78,7 @@ class VLLMInference(Inference):
                 "`pip install 'modern-bert-score[vllm]'`."
             )
         # Backward compatibility for old callsites that pass task="embed".
-        task = kwargs.pop("task", None)
-        if task == "embed":
-            kwargs.setdefault("runner", "pooling")
-            kwargs.setdefault("convert", "embed")
-
+        kwargs = self._prepare_args(kwargs)
         try:
             self.model = LLM(**kwargs)
         except Exception as exc:
@@ -101,6 +97,14 @@ class VLLMInference(Inference):
                 ) from exc
             raise
         self.eps: float = 1e-12
+
+    @staticmethod
+    def _prepare_args(kwargs: Any) -> Any:
+        task = kwargs.pop("task", None)
+        if task == "embed":
+            kwargs.setdefault("runner", "pooling")
+            kwargs.setdefault("convert", "embed")
+        return kwargs
 
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any
