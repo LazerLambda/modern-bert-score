@@ -1,5 +1,11 @@
 # Dev README
 
+## Install Dev Requirements
+
+```{bash}
+pip install -e .[dev]
+```
+
 ## Linting
 
 To check code quality and formatting, run the following commands:

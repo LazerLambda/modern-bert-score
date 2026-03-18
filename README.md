@@ -1,6 +1,6 @@
 # BERTScore for the Inference Era
 
-![Performance](runtime_comp_nvidia_rtx_4060.png)
+![BERTScore](zhang_19_figure_1.png)
 
 **Modern-BERT-Score** is a reimplementation of the BERTScore metric introduced by [Zhang et al., 2019](https://arxiv.org/abs/1904.09675), optimized for modern inference workflows using [SentenceTransformers](https://www.sbert.net/) and [vLLM](https://vllm.ai/).  
 
@@ -31,6 +31,8 @@ pip install modern-bert-score[vllm]
 ```
 This implementation is significantly faster than the original BERTScore, especially with GPU acceleration.
 
+![Performance](runtime_comp_nvidia_rtx_4060.png)
+
 ## 🛠 Usage
 ### Example
 ```python
@@ -51,15 +53,10 @@ print("Recall scores:", R)
 print("F1 scores:", F1)
 ```
 
-## BERTScore
-BERTScore ([Zhang et al., 2019](https://arxiv.org/abs/1904.09675)) evaluates the similarity between candidate and reference texts by comparing their contextual embeddings from a pre-trained transformer model. For each token in the candidate, it finds the most similar token in the reference (using cosine similarity) and aggregates these scores to compute precision, recall, and F1. Optionally, IDF-weighting can be applied to give more importance to rare and informative words, improving the metric’s sensitivity to meaningful content rather than common words. This approach captures semantic similarity beyond exact word matches, making it robust for tasks like machine translation and text generation evaluation. The following figure, taken from the original paper, illustrates how BERTScore works:
-
-![BERTScore](zhang_19_figure_1.png)
-
 ## ⚠️ NOTICE
 
 - For best performance, an optimal layer should be used for each model.  
-- To find the optimal layer, please use the script from the original BERTScore implementation.  
+- To find the optimal layer, [please use this script from the original BERTScore implementation](https://github.com/Tiiiger/bert_score/tree/master/tune_layers).  
 
 Some pre-truncated models optimized for vLLM are available on [Hugging Face](https://huggingface.co/collections/LazerLambda/modern-bertscore):
 
