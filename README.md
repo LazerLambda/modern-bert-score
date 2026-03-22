@@ -1,7 +1,6 @@
 # Modern BERTScore for Fast Inference
 
 [![CI](https://github.com/LazerLambda/modern-bert-score/actions/workflows/ci.yml/badge.svg)](https://github.com/LazerLambda/modern-bert-score/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/LazerLambda/modern-bert-score/graph/badge.svg?token=token_required)](https://codecov.io/gh/LazerLambda/modern-bert-score)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
 [![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
