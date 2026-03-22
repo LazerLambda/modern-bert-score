@@ -1,9 +1,10 @@
 import unittest
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 import torch
 from transformers import logging as transformers_logging
+
 from modern_bert_score.bert_score import BertScore
 from modern_bert_score.inference import VLLM_AVAILABLE
 
@@ -85,7 +86,7 @@ class TestBertScore(unittest.TestCase):
         cand2 = ["Hello World!", "Hello World!"]
         ref2 = ["Hello World!"]
         bs = BertScore(model_id=self.test_model, backend="default")
-        with self.assertRaises(ValueError): 
+        with self.assertRaises(ValueError):
             bs(cand2, ref2)
 
     def test_unequal_input(self):
@@ -161,11 +162,32 @@ class TestBertScore(unittest.TestCase):
     def test_base_line(self):
         cand1 = ["Hello World!"]
         ref1 = ["Hello World!"]
-        bs = BertScore(model_id=self.test_model, backend="default", baseline_rescaling=True)
+        bs = BertScore(model_id=self.test_model, backend="default", baseline_rescaling=True, custom_baseline=(0.5, 0.5, 0.5))
         p_r_f1 = bs(cand1, ref1)
         self.assertEqual(p_r_f1[0][0], 1.0)
         self.assertEqual(p_r_f1[0][1], 1.0)
         self.assertEqual(p_r_f1[0][2], 1.0)
+
+    def test_baseline_rescaling_exception(self):
+        """Test that ValueError is raised when baseline is missing."""
+        with self.assertRaises(ValueError):
+            BertScore(model_id=self.test_model, backend="default", baseline_rescaling=True)
+
+    def test_baseline_rescaling_injection(self):
+        """Test baseline rescaling with injected baseline for the test model."""
+        from modern_bert_score.consts import BASELINES
+        # Inject test model baseline (P, R, F1) tuple. F1 is at index 2.
+        BASELINES[self.test_model] = (0.5, 0.5, 0.5)
+        try:
+            bs = BertScore(model_id=self.test_model, backend="default", baseline_rescaling=True)
+            self.assertEqual(bs.baseline, (0.5, 0.5, 0.5))
+            # Test computation
+            cand1 = ["Hello World!"]
+            ref1 = ["Hello World!"]
+            p_r_f1 = bs(cand1, ref1)
+            self.assertEqual(p_r_f1[0][2], 1.0)
+        finally:
+            del BASELINES[self.test_model]
 
     def test_inference_base_not_implemented_error(self):
         from modern_bert_score.inference import Inference
@@ -281,8 +303,8 @@ class TestBertScore(unittest.TestCase):
 def vllm_bert_score():
     # This setup runs once for the module
     bs = BertScore(
-        model_id=TEST_MODEL, 
-        backend="vllm", 
+        model_id=TEST_MODEL,
+        backend="vllm",
         vllm_args={"gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp", "task": "embed"}
     )
     return bs
@@ -293,10 +315,10 @@ def test_vllm_only_feature(vllm_bert_score):
     """Test that requests the fixture above."""
     cand1 = ["Hello World!"]
     ref1 = ["Hello World!"]
-    
+
     # Use the fixture passed as an argument
     p_r_f1 = vllm_bert_score(cand1, ref1)
-    
+
     # Use standard asserts instead of self.assertEqual
     assert p_r_f1[0][0] == 1.0
     assert p_r_f1[0][1] == 1.0
@@ -304,4 +326,3 @@ def test_vllm_only_feature(vllm_bert_score):
 
     # Test kwargs passed to vLLMInference
     # kwargs = {"task": "embed", "gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp"}
-    

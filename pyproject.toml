@@ -1,21 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "modern-bert-score"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.0.1"
+description = "A reimplementation of the BERTScore metric optimized for modern inference workflows."
 readme = "README.md"
 requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Environment :: GPU :: NVIDIA CUDA",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+license = "Apache-2.0"
+license-files = ["LICEN[CS]E*"]
+authors = [
+    {name = "Philipp Koch", email="PhillKoch@protonmail.com"},
+]
 dependencies = [
-    "datasets>=4.7.0",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
     "sentence-transformers>=5.2.3",
     "torch>=2.9.1",
+    "transformers>=4.57.6",
 ]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"
 
 [project.optional-dependencies]
 vllm = ["vllm>=0.16.0"]
 dev = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "myst-parser",
+    "pytest",
+    "pytest-cov",
     "ruff",
+    "flake8",
     "mypy",
     "flake8",
     "pytest-cov"
