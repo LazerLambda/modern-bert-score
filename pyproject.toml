@@ -51,7 +51,7 @@ dev = [
 include = ["modern_bert_score*"]
 
 [tool.ruff]
-line-length = 79
+line-length = 90
 extend-exclude = ["tests"]
 
 [tool.ruff.lint]

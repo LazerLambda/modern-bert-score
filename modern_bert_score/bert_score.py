@@ -38,7 +38,11 @@ class BertScore:
                 self.baseline = custom_baseline
             else:
                 raise ValueError(
-                    f"Baseline rescaling enabled but no baseline found for model {model_id} and no custom baseline provided."
+                    (
+                        "Baseline rescaling enabled but no"
+                        f"baseline found for model {model_id}"
+                        " and no custom baseline provided."
+                    )
                 )
         self.baseline_rescaling: bool = baseline_rescaling
         if backend == "vllm":
@@ -56,7 +60,10 @@ class BertScore:
             raise ValueError(f"Unsupported backend {backend}")
 
     def __call__(
-        self, candidates: Union[str, List[str]], references: Union[str, List[str]], **kwargs: Any
+        self,
+        candidates: Union[str, List[str]],
+        references: Union[str, List[str]],
+        **kwargs: Any
     ) -> List[Tuple[float, float, float]]:
         assert reduce(
             lambda acc, x: acc and isinstance(x, str), candidates, True
@@ -203,7 +210,11 @@ class BertScore:
             )
             return batch_count, encoded_batch
 
-    def _tokenize_data(self, corpus: List[str], batch_size: int = 100_000, nthreads: int = 4) -> List[List[int]]:
+    def _tokenize_data(
+            self,
+            corpus: List[str],
+            batch_size: int = 100_000,
+            nthreads: int = 4) -> List[List[int]]:
         collected_input_ids: List[List[int]] = []
 
         process_partial = partial(
