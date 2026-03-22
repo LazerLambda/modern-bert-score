@@ -1,6 +1,7 @@
 # Modern BERTScore for Fast Inference
 
 [![CI](https://github.com/LazerLambda/modern-bert-score/actions/workflows/ci.yml/badge.svg)](https://github.com/LazerLambda/modern-bert-score/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/LazerLambda/modern-bert-score/graph/badge.svg?token=token_required)](https://codecov.io/gh/LazerLambda/modern-bert-score)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
 [![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
@@ -38,7 +39,7 @@ pip install modern-bert-score[vllm]
 This implementation is significantly faster than the original BERTScore, especially with GPU acceleration.
 
 ## 📝 BERTScore
-BERTScore ([Zhang et al., 2019](https://arxiv.org/abs/1904.09675)) evaluates the similarity between candidate and reference texts by comparing their contextual embeddings from a pre-trained transformer model. For each token in the candidate, it finds the most similar token in the reference (using cosine similarity) and aggregates these scores to compute **precision**, **recall**, and **F1**. Optionally, **IDF-weighting** can be applied to give more importance to rare and informative words, improving the metric’s sensitivity to meaningful content over common words. This approach captures semantic similarity beyond exact word matches, making it robust for tasks such as machine translation and text generation evaluation.  
+BERTScore ([Zhang et al., 2019](https://arxiv.org/abs/1904.09675)) evaluates the similarity between candidate and reference texts by comparing their contextual embeddings from a pre-trained transformer model. For each token in the candidate, it finds the most similar token in the reference (using cosine similarity) and aggregates these scores to compute **precision**, **recall**, and **F1**. Optionally, **IDF-weighting** can be applied to give more importance to rare and informative words, improving the metric’s sensitivity to meaningful content over common words. Additionally, optional **Baseline Rescaling** shifts the scores such that the score is in the range of [0,1]. This approach captures semantic similarity beyond exact word matches, making it robust for tasks such as machine translation and text generation evaluation.  
 
 The following figure, taken from the original paper, illustrates how BERTScore works:
 
