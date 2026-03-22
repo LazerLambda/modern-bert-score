@@ -78,3 +78,5 @@ Some pre-truncated models optimized for vLLM are available on [Hugging Face](htt
 - [x] Add IDF-weighted scoring  
 - [ ] Add baseline-rescaling and scripts for identifying optimal baselines  
 - [ ] Add model (vLLM-)adaptation script for slicing the model
+- [ ] Add multilingual support
+- [ ] Add CLI tool

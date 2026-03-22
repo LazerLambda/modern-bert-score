@@ -1,4 +1,5 @@
 import gc
+import time
 from typing import Any, List
 
 import torch
@@ -128,9 +129,8 @@ class VLLMInference(Inference):
         ]  # TODO: Check superflous?
         return collector[0 : len(candidates)], collector[len(candidates) :]
 
-    def __del__(self) -> None:
-        # In case engine shuts down ungracefully and model is already freed.
-        if self.model:
+    def cleanup(self) -> None:
+        if hasattr(self, "model") and self.model:
             del self.model
         gc.collect()
         torch.cuda.empty_cache()

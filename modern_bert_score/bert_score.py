@@ -1,3 +1,4 @@
+import os
 from collections import Counter, defaultdict
 from functools import partial, reduce
 from itertools import chain, islice
@@ -8,10 +9,9 @@ from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 import torch
 from transformers import AutoTokenizer
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
-from transformers.models.bert.tokenization_bert_fast import BertTokenizerFast
+from modern_bert_score.consts import BASELINES
 
 from modern_bert_score.inference import STInference, VLLMInference
-
 
 class BertScore:
     inference_engine: Optional[Union[STInference, VLLMInference]]
@@ -22,6 +22,7 @@ class BertScore:
         model_id: str = "answerdotai/ModernBERT-base",
         idf_weighting: bool = False,
         baseline_rescaling: bool = False,
+        custom_baseline: Optional[Tuple[float, float, float]] = None,
         device: str = "cpu",  # TODO Enum cuda, mlx, cpu?
         backend: str = "default",  # TODO Enum default, vllm, onnx, etc
         sentence_transformers_args: Optional[Dict[str, Any]] = None,
@@ -29,6 +30,17 @@ class BertScore:
     ):
         self.tokenizer: PreTrainedTokenizerFast = AutoTokenizer.from_pretrained(model_id)
         self.idf_weighting: bool = idf_weighting
+        if baseline_rescaling:
+            if model_id in BASELINES.keys():
+                self.baseline = BASELINES[model_id]
+                if isinstance(self.baseline, tuple):
+                    self.baseline = self.baseline
+            elif custom_baseline is not None:
+                self.baseline = custom_baseline
+            else:
+                raise ValueError(
+                    f"Baseline rescaling enabled but no baseline found for model {model_id} and no custom baseline provided."
+                )
         self.baseline_rescaling: bool = baseline_rescaling
         if backend == "vllm":
             self.inference_engine = VLLMInference(
@@ -100,13 +112,15 @@ class BertScore:
         if self.baseline_rescaling:
             rescaled_scores = []
             for p, r, f1 in scores:
-                rescaled_f1 = (f1 - self.baseline) / (1 - self.baseline)
-                rescaled_scores.append((p, r, rescaled_f1))
+                rescaled_p = (p - self.baseline[0]) / (1 - self.baseline[0])
+                rescaled_r = (r - self.baseline[1]) / (1 - self.baseline[1])
+                rescaled_f1 = (f1 - self.baseline[2]) / (1 - self.baseline[2])
+                rescaled_scores.append((rescaled_p, rescaled_r, rescaled_f1))
             return rescaled_scores
         return scores
-    
+
     @staticmethod
-    def _check_nan(f1: float): 
+    def _check_nan(f1: float):
         if torch.isnan(f1):
             f1 = 0.0
         return f1
@@ -189,7 +203,7 @@ class BertScore:
                 chain.from_iterable(map(set, encoded_batch))
             )
             return batch_count, encoded_batch
-    
+
     def _tokenize_data(self, corpus: List[str], batch_size: int = 100_000, nthreads: int = 4) -> List[List[int]]:
         collected_input_ids: List[List[int]] = []
 
@@ -256,27 +270,31 @@ class BertScore:
         )
         return idf_dict, collected_input_ids
 
-ModernBERTBaseScore = partial(
-    BertScore, model_id="LazerLambda/ModernBERT-base-ModBERTScore-12"
-)
-ModernBERTBaseScore.__doc__ = "BertScore with ModernBERT-base-ModBERTScore-12"
+def ModernBERTBaseScore(**kwargs: Any) -> "BertScore":
+    """BertScore with ModernBERT-base-ModBERTScore-12"""
+    kwargs.pop("model_id", None)
+    return BertScore(model_id="LazerLambda/ModernBERT-base-ModBERTScore-12", **kwargs)
 
-ModernBERTLargeScore = partial(
-    BertScore, model_id="LazerLambda/ModernBERT-large-ModBERTScore-19"
-)
-ModernBERTLargeScore.__doc__ = "BertScore with ModernBERT-large-ModBERTScore-19"
 
-RobertaBaseScore = partial(
-    BertScore, model_id="LazerLambda/roberta-base-ModBERTScore-10"
-)
-RobertaBaseScore.__doc__ = "BertScore with roberta-base-ModBERTScore-10"
+def ModernBERTLargeScore(**kwargs: Any) -> "BertScore":
+    """BertScore with ModernBERT-large-ModBERTScore-19"""
+    kwargs.pop("model_id", None)
+    return BertScore(model_id="LazerLambda/ModernBERT-large-ModBERTScore-19", **kwargs)
 
-RobertaLargeScore = partial(
-    BertScore, model_id="LazerLambda/roberta-large-ModBERTScore-17"
-)
-RobertaLargeScore.__doc__ = "BertScore with roberta-large-ModBERTScore-17"
 
-RobertaLargeMNLI_Score = partial(
-    BertScore, model_id="LazerLambda/roberta-large-mnli-ModBERTScore-19"
-)
-RobertaLargeMNLI_Score.__doc__ = "BertScore with roberta-large-mnli-ModBERTScore-19"
+def RobertaBaseScore(**kwargs: Any) -> "BertScore":
+    """BertScore with roberta-base-ModBERTScore-10"""
+    kwargs.pop("model_id", None)
+    return BertScore(model_id="LazerLambda/roberta-base-ModBERTScore-10", **kwargs)
+
+
+def RobertaLargeScore(**kwargs: Any) -> "BertScore":
+    """BertScore with roberta-large-ModBERTScore-17"""
+    kwargs.pop("model_id", None)
+    return BertScore(model_id="LazerLambda/roberta-large-ModBERTScore-17", **kwargs)
+
+
+def RobertaLargeMNLIScore(**kwargs: Any) -> "BertScore":
+    """BertScore with roberta-large-mnli-ModBERTScore-19"""
+    kwargs.pop("model_id", None)
+    return BertScore(model_id="LazerLambda/roberta-large-mnli-ModBERTScore-19", **kwargs)
