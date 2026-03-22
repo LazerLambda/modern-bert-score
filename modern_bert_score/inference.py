@@ -18,7 +18,7 @@ except ImportError:
 # TODO: Cache reference embeddings
 class Inference:
 
-    model = None
+    model: Any = None
 
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any

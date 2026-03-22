@@ -153,7 +153,7 @@ class BertScore:
         assert len(candidates.shape) == 2 and len(references.shape) == 2
         candidates = candidates[1:-1]  # remove CLS and SEP
         references = references[1:-1]
-        similarities: torch.tensor = candidates @ references.T
+        similarities: torch.Tensor = candidates @ references.T
         r_bert = similarities.max(dim=0).values.cpu()
         p_bert = similarities.max(dim=1).values.cpu()
         if idf_dict_ref and input_ids_cand and input_ids_ref:
