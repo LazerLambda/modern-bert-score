@@ -1,4 +1,3 @@
-import os
 from collections import Counter, defaultdict
 from functools import partial, reduce
 from itertools import chain, islice
@@ -9,13 +8,13 @@ from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 import torch
 from transformers import AutoTokenizer
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
-from modern_bert_score.consts import BASELINES
 
+from modern_bert_score.consts import BASELINES
 from modern_bert_score.inference import STInference, VLLMInference
+
 
 class BertScore:
     inference_engine: Optional[Union[STInference, VLLMInference]]
-    baseline: float = 0.5  # TODO
 
     def __init__(
         self,
@@ -32,7 +31,7 @@ class BertScore:
         self.idf_weighting: bool = idf_weighting
         if baseline_rescaling:
             if model_id in BASELINES.keys():
-                self.baseline = BASELINES[model_id]
+                self.baseline: Tuple[float, float, float] = BASELINES[model_id]
                 if isinstance(self.baseline, tuple):
                     self.baseline = self.baseline
             elif custom_baseline is not None:
@@ -120,9 +119,9 @@ class BertScore:
         return scores
 
     @staticmethod
-    def _check_nan(f1: float):
+    def _check_nan(f1: torch.Tensor) -> torch.Tensor:
         if torch.isnan(f1):
-            f1 = 0.0
+            f1 = torch.Tensor([0.0])
         return f1
 
 

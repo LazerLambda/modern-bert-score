@@ -1,5 +1,4 @@
 import gc
-import time
 from typing import Any, List
 
 import torch
@@ -48,6 +47,8 @@ class STInference(Inference):
         self, candidates: List[str], references: List[str], **kwargs: Any
     ) -> tuple[List[torch.Tensor], List[torch.Tensor]]:
 
+        if self.model is None:
+            raise RuntimeError("Model not loaded.")
         embds_refs = self.model.encode(
             references,
             output_value="token_embeddings",
@@ -110,6 +111,8 @@ class VLLMInference(Inference):
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any
     ) -> tuple[List[torch.Tensor], List[torch.Tensor]]:
+        if self.model is None:
+            raise RuntimeError("Model not loaded.")
         outputs_cands = self.model.encode(
             candidates, pooling_task="token_embed", **kwargs
         )

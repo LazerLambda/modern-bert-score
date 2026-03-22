@@ -52,7 +52,7 @@ include = ["modern_bert_score*"]
 
 [tool.ruff]
 line-length = 79
-extend-include = ["*.py"]
+extend-exclude = ["tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -60,9 +60,7 @@ select = ["E", "F", "W", "I"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
-exclude = [
-    "prepare_model\\.py$",
-]
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore::DeprecationWarning"]
+exclude = ["^build/"]

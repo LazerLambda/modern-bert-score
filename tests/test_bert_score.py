@@ -114,11 +114,9 @@ class TestBertScore(unittest.TestCase):
     def test_check_nan(self):
         f1_nan = torch.tensor(torch.nan)
         f1_checked = BertScore._check_nan(f1_nan)
-        self.assertEqual(f1_checked, 0.0)
+        self.assertEqual(f1_checked, torch.Tensor([0.0]))
 
     def test_exception_idf_bertscore(self):
-        cand1 = ["Hello World!"]
-        ref1 = ["Hello World!"]
         bs = BertScore(model_id=self.test_model, backend="default")
         with self.assertRaises(ValueError):
             bs.bert_score(
@@ -151,13 +149,13 @@ class TestBertScore(unittest.TestCase):
 
     def test_tokenize_data(self):
         bs = BertScore(model_id=self.test_model, backend="default")
-        input_ids = bs._tokenize_data(["Hello World!", "Hello World!"], nthreads=4)
-        input_ids = bs._tokenize_data(["Hello World!", "Hello World!"], nthreads=0)
+        bs._tokenize_data(["Hello World!", "Hello World!"], nthreads=4)
+        bs._tokenize_data(["Hello World!", "Hello World!"], nthreads=0)
 
     def test_get_idf_dict(self):
         bs = BertScore(model_id=self.test_model, backend="default")
-        input_ids = bs.get_idf_dict(["Hello World!", "Hello World!"], nthreads=4)
-        input_ids = bs.get_idf_dict(["Hello World!", "Hello World!"], nthreads=0)
+        bs.get_idf_dict(["Hello World!", "Hello World!"], nthreads=4)
+        bs.get_idf_dict(["Hello World!", "Hello World!"], nthreads=0)
 
     def test_base_line(self):
         cand1 = ["Hello World!"]

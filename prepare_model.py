@@ -131,6 +131,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--revision", default=None, help="Optional model revision"
     )
+    parser.add_argument(
+        "--push-to-hub",
+        action="store_true",
+        help="Push the prepared model to the Hub",
+    )
+    parser.add_argument(
+        "--hub-model-id",
+        help="The Hub repo ID to push to (required if --push-to-hub is set)",
+    )
+    parser.add_argument(
+        "--hub-token",
+        help="The token to use to push to the Model Hub.",
+    )
     return parser.parse_args()
 
 
@@ -158,6 +171,15 @@ def main() -> None:
     print(f"Layer path: {layer_path}")
     print(f"Encoder layers: {original_count} -> {target_count}")
     print(f"Architectures: {base_model.config.architectures}")
+
+    if args.push_to_hub:
+        if args.hub_model_id is None:
+            raise ValueError(
+                "--hub-model-id is required when --push-to-hub is set"
+            )
+        print(f"Pushing to Hub: {args.hub_model_id}")
+        base_model.push_to_hub(args.hub_model_id, token=args.hub_token)
+        tokenizer.push_to_hub(args.hub_model_id, token=args.hub_token)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ To check code quality and formatting, run the following commands:
 ```bash
 uv run ruff format .
 uvx flake8 .
-uvx mypy .
+uvx mypy modern_bert_score
 uv run ruff check . --fix
 ```
 
