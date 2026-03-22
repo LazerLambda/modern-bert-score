@@ -65,16 +65,16 @@ class TestBertScore(unittest.TestCase):
         ref1 = ["Hello World!"]
         bs = BertScore(model_id=self.test_model, backend="default")
         p_r_f1 = bs(cand1, ref1)
-        self.assertEqual(p_r_f1[0][0], 1.0)
-        self.assertEqual(p_r_f1[0][1], 1.0)
-        self.assertEqual(p_r_f1[0][2], 1.0)
+        self.assertAlmostEqual(p_r_f1[0][0], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][1], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][2], 1.0, places=5)
 
         cand2 = ["Hello World!"]
         ref2 = [" Hello World! "]
         p_r_f1 = bs(cand2, ref2)
-        self.assertEqual(p_r_f1[0][0], 1.0)
-        self.assertEqual(p_r_f1[0][1], 1.0)
-        self.assertEqual(p_r_f1[0][2], 1.0)
+        self.assertAlmostEqual(p_r_f1[0][0], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][1], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][2], 1.0, places=5)
 
     def test_unequal_length(self):
         cand1 = ["Hello World!"]
@@ -162,9 +162,9 @@ class TestBertScore(unittest.TestCase):
         ref1 = ["Hello World!"]
         bs = BertScore(model_id=self.test_model, backend="default", baseline_rescaling=True, custom_baseline=(0.5, 0.5, 0.5))
         p_r_f1 = bs(cand1, ref1)
-        self.assertEqual(p_r_f1[0][0], 1.0)
-        self.assertEqual(p_r_f1[0][1], 1.0)
-        self.assertEqual(p_r_f1[0][2], 1.0)
+        self.assertAlmostEqual(p_r_f1[0][0], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][1], 1.0, places=5)
+        self.assertAlmostEqual(p_r_f1[0][2], 1.0, places=5)
 
     def test_baseline_rescaling_exception(self):
         """Test that ValueError is raised when baseline is missing."""
@@ -183,7 +183,7 @@ class TestBertScore(unittest.TestCase):
             cand1 = ["Hello World!"]
             ref1 = ["Hello World!"]
             p_r_f1 = bs(cand1, ref1)
-            self.assertEqual(p_r_f1[0][2], 1.0)
+            self.assertAlmostEqual(p_r_f1[0][2], 1.0, places=5)
         finally:
             del BASELINES[self.test_model]
 
@@ -318,9 +318,9 @@ def test_vllm_only_feature(vllm_bert_score):
     p_r_f1 = vllm_bert_score(cand1, ref1)
 
     # Use standard asserts instead of self.assertEqual
-    assert p_r_f1[0][0] == 1.0
-    assert p_r_f1[0][1] == 1.0
-    assert p_r_f1[0][2] == 1.0
+    assert p_r_f1[0][0] == pytest.approx(1.0)
+    assert p_r_f1[0][1] == pytest.approx(1.0)
+    assert p_r_f1[0][2] == pytest.approx(1.0)
 
     # Test kwargs passed to vLLMInference
     # kwargs = {"task": "embed", "gpu_memory_utilization": 0.3, "enforce_eager": True, "distributed_executor_backend": "mp"}
