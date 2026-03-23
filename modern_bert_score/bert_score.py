@@ -14,6 +14,11 @@ from modern_bert_score.inference import STInference, VLLMInference
 
 
 class BertScore:
+    """Computes BERTScore for text generation evaluation.
+
+    Attributes:
+        inference_engine: The backend engine used for computing embeddings.
+    """
     inference_engine: Optional[Union[STInference, VLLMInference]]
 
     def __init__(
@@ -27,6 +32,18 @@ class BertScore:
         sentence_transformers_args: Optional[Dict[str, Any]] = None,
         vllm_args: Optional[Dict[str, Any]] = None,
     ):
+        """Initializes the BertScore metric.
+
+        Args:
+            model_id: The Hugging Face model ID to use for embeddings.
+            idf_weighting: Whether to apply IDF (Inverse Document Frequency) weighting.
+            baseline_rescaling: Whether to apply baseline rescaling to scores.
+            custom_baseline: A tuple of (Precision, Recall, F1) to use as a baseline.
+            device: The device to run inference on (e.g., "cpu", "cuda").
+            backend: The inference backend ("default" for SentenceTransformers or "vllm").
+            sentence_transformers_args: Dictionary of arguments passed to SentenceTransformer.
+            vllm_args: Dictionary of arguments passed to vLLM.
+        """
         self.tokenizer: PreTrainedTokenizerFast = AutoTokenizer.from_pretrained(model_id)
         self.idf_weighting: bool = idf_weighting
         if baseline_rescaling:
@@ -65,6 +82,19 @@ class BertScore:
         references: Union[str, List[str]],
         **kwargs: Any
     ) -> List[Tuple[float, float, float]]:
+        """Computes BERTScore for the given candidates and references.
+
+        Args:
+            candidates: A single candidate string or a list of candidate strings.
+            references: A single reference string or a list of reference strings.
+            **kwargs: Additional keyword arguments passed to the inference engine.
+
+        Returns:
+            A list of tuples, where each tuple contains (Precision, Recall, F1).
+
+        Raises:
+            ValueError: If the number of candidates and references do not match.
+        """
         assert reduce(
             lambda acc, x: acc and isinstance(x, str), candidates, True
         ), "Candidates must be a list of strings or a string."
@@ -127,6 +157,14 @@ class BertScore:
 
     @staticmethod
     def _check_nan(f1: torch.Tensor) -> torch.Tensor:
+        """Checks for NaN values in F1 scores and replaces them with 0.0.
+
+        Args:
+            f1: The F1 score tensor.
+
+        Returns:
+            The cleaned F1 score tensor.
+        """
         if torch.isnan(f1):
             f1 = torch.Tensor([0.0])
         return f1
@@ -140,6 +178,18 @@ class BertScore:
         input_ids_cand: Optional[List[int]] = None,
         input_ids_ref: Optional[List[int]] = None,
     ) -> Tuple[float, float, float]:
+        """Computes the BERTScore for a single pair of token embedding matrices.
+
+        Args:
+            candidates: Tensor of candidate token embeddings.
+            references: Tensor of reference token embeddings.
+            idf_dict_ref: Dictionary mapping token IDs to IDF weights (optional).
+            input_ids_cand: List of token IDs for the candidate text (optional).
+            input_ids_ref: List of token IDs for the reference text (optional).
+
+        Returns:
+            A tuple containing (Precision, Recall, F1).
+        """
         has_idf_dict = idf_dict_ref is not None
         has_input_ids = (
             input_ids_cand is not None and input_ids_ref is not None
@@ -179,6 +229,15 @@ class BertScore:
     def _batchify(
         iterable: List[str], batch_size: int
     ) -> Generator[List[str], None, None]:
+        """Yields batches from an iterable.
+
+        Args:
+            iterable: The list of strings to batchify.
+            batch_size: The size of each batch.
+
+        Yields:
+            A list of strings representing a batch.
+        """
         iterator = iter(iterable)
         while True:
             batch = list(islice(iterator, batch_size))
@@ -192,6 +251,17 @@ class BertScore:
         tokenizer: PreTrainedTokenizerFast,
         ignore_counter: bool = False,
     ) -> Tuple[Counter[int], List[List[int]]]:
+        """Processes a batch of text by tokenizing and optionally counting tokens.
+
+        Args:
+            batch: A list of strings to process.
+            tokenizer: The tokenizer to use.
+            ignore_counter: If True, skips counting tokens for IDF.
+
+        Returns:
+            A tuple containing a Counter of token IDs (or empty) and a list of
+            tokenized input IDs.
+        """
         stripped_batch = [sample.strip() for sample in batch]
 
         encoded_batch = tokenizer(
@@ -215,6 +285,16 @@ class BertScore:
             corpus: List[str],
             batch_size: int = 100_000,
             nthreads: int = 4) -> List[List[int]]:
+        """Tokenizes a corpus of strings using multiple threads.
+
+        Args:
+            corpus: The list of strings to tokenize.
+            batch_size: The number of samples per batch.
+            nthreads: The number of threads to use for parallel processing.
+
+        Returns:
+            A list of lists containing token IDs for each string in the corpus.
+        """
         collected_input_ids: List[List[int]] = []
 
         process_partial = partial(
@@ -241,10 +321,16 @@ class BertScore:
         nthreads: int = 4,
         batch_size: int = 100_000,
     ) -> Tuple[Dict[int, float], List[List[int]]]:  # TODO: Return dict
-        """Build an IDF (Inverse-Document-Frequency) dictionary for a corpus.
+        """Builds an IDF (Inverse-Document-Frequency) dictionary for a corpus.
 
-        When ``return_input_ids`` is true, this also returns the tokenized
-        ``input_ids`` for each corpus entry in the same order as ``corpus``.
+        Args:
+            corpus: The list of strings to build the IDF dictionary from.
+            nthreads: The number of threads to use for parallel processing.
+            batch_size: The number of samples per batch.
+
+        Returns:
+            A tuple containing the IDF dictionary mapping token IDs to weights,
+            and the tokenized input IDs for the corpus.
         """
         idf_count: Counter[int] = Counter()
         collected_input_ids: List[List[int]] = []
@@ -281,30 +367,65 @@ class BertScore:
         return idf_dict, collected_input_ids
 
 def ModernBERTBaseScore(**kwargs: Any) -> "BertScore":
-    """BertScore with ModernBERT-base-ModBERTScore-12"""
+    """Initializes BertScore with the `LazerLambda/ModernBERT-base-ModBERTScore-12` model.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments passed to the BertScore constructor.
+
+    Returns:
+        A BertScore instance configured with the ModernBERT base model.
+    """
     kwargs.pop("model_id", None)
     return BertScore(model_id="LazerLambda/ModernBERT-base-ModBERTScore-12", **kwargs)
 
 
 def ModernBERTLargeScore(**kwargs: Any) -> "BertScore":
-    """BertScore with ModernBERT-large-ModBERTScore-19"""
+    """Initializes BertScore with the `LazerLambda/ModernBERT-large-ModBERTScore-19` model.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments passed to the BertScore constructor.
+
+    Returns:
+        A BertScore instance configured with the ModernBERT large model.
+    """
     kwargs.pop("model_id", None)
     return BertScore(model_id="LazerLambda/ModernBERT-large-ModBERTScore-19", **kwargs)
 
 
 def RobertaBaseScore(**kwargs: Any) -> "BertScore":
-    """BertScore with roberta-base-ModBERTScore-10"""
+    """Initializes BertScore with the `LazerLambda/roberta-base-ModBERTScore-10` model.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments passed to the BertScore constructor.
+
+    Returns:
+        A BertScore instance configured with the RoBERTa base model.
+    """
     kwargs.pop("model_id", None)
     return BertScore(model_id="LazerLambda/roberta-base-ModBERTScore-10", **kwargs)
 
 
 def RobertaLargeScore(**kwargs: Any) -> "BertScore":
-    """BertScore with roberta-large-ModBERTScore-17"""
+    """Initializes BertScore with the `LazerLambda/roberta-large-ModBERTScore-17` model.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments passed to the BertScore constructor.
+
+    Returns:
+        A BertScore instance configured with the RoBERTa large model.
+    """
     kwargs.pop("model_id", None)
     return BertScore(model_id="LazerLambda/roberta-large-ModBERTScore-17", **kwargs)
 
 
 def RobertaLargeMNLIScore(**kwargs: Any) -> "BertScore":
-    """BertScore with roberta-large-mnli-ModBERTScore-19"""
+    """Initializes BertScore with the `LazerLambda/roberta-large-mnli-ModBERTScore-19` model.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments passed to the BertScore constructor.
+
+    Returns:
+        A BertScore instance configured with the RoBERTa large MNLI model.
+    """
     kwargs.pop("model_id", None)
     return BertScore(model_id="LazerLambda/roberta-large-mnli-ModBERTScore-19", **kwargs)

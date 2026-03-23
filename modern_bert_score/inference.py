@@ -17,16 +17,29 @@ except ImportError:
 
 # TODO: Cache reference embeddings
 class Inference:
+    """Abstract base class for inference backends."""
 
     model: Any = None
 
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any
     ) -> tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """Computes embeddings for candidates and references.
+
+        Args:
+            candidates: A list of candidate strings.
+            references: A list of reference strings.
+            **kwargs: Additional arguments passed to the underlying model.
+
+        Returns:
+            A tuple containing two lists of tensors (candidate_embeddings, reference_embeddings).
+        """
         raise NotImplementedError("Method must be implemented in Subclass.")
 
 
 class STInference(Inference):
+    """Inference backend using SentenceTransformers."""
+
     def __init__(
         self,
         model_id: str,
@@ -34,6 +47,14 @@ class STInference(Inference):
         batch_size: int = 64,
         **kwargs: Any,
     ):
+        """Initializes the SentenceTransformers inference backend.
+
+        Args:
+            model_id: The model identifier or path.
+            device: The device to load the model on (e.g., 'cpu', 'cuda').
+            batch_size: Batch size for inference.
+            **kwargs: Additional arguments for SentenceTransformer.
+        """
         self.model = SentenceTransformer(
             model_name_or_path=model_id, device=device, **kwargs
         )
@@ -46,6 +67,16 @@ class STInference(Inference):
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any
     ) -> tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """Computes embeddings using SentenceTransformers.
+
+        Args:
+            candidates: A list of candidate strings.
+            references: A list of reference strings.
+            **kwargs: Additional arguments passed to `model.encode`.
+
+        Returns:
+            A tuple containing two lists of tensors (candidate_embeddings, reference_embeddings).
+        """
 
         if self.model is None:
             raise RuntimeError("Model not loaded.")
@@ -72,7 +103,14 @@ class STInference(Inference):
 
 
 class VLLMInference(Inference):
+    """Inference backend using vLLM."""
+
     def __init__(self, **kwargs: Any):
+        """Initializes the vLLM inference backend.
+
+        Args:
+            **kwargs: Arguments passed to the vLLM `LLM` constructor.
+        """
         if not VLLM_AVAILABLE:
             raise ImportError(
                 "vLLM is not installed. To use the vLLM backend, please "
@@ -102,6 +140,7 @@ class VLLMInference(Inference):
 
     @staticmethod
     def _prepare_args(kwargs: Any) -> Any:
+        """Prepares arguments for vLLM, setting defaults for embedding tasks."""
         task = kwargs.pop("task", None)
         if task == "embed":
             kwargs.setdefault("runner", "pooling")
@@ -111,6 +150,16 @@ class VLLMInference(Inference):
     def inference(
         self, candidates: List[str], references: List[str], **kwargs: Any
     ) -> tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """Computes embeddings using vLLM.
+
+        Args:
+            candidates: A list of candidate strings.
+            references: A list of reference strings.
+            **kwargs: Additional arguments passed to `model.encode`.
+
+        Returns:
+            A tuple containing two lists of tensors (candidate_embeddings, reference_embeddings).
+        """
         if self.model is None:
             raise RuntimeError("Model not loaded.")
         outputs_cands = self.model.encode(
@@ -133,6 +182,7 @@ class VLLMInference(Inference):
         return collector[0 : len(candidates)], collector[len(candidates) :]
 
     def cleanup(self) -> None:
+        """Cleans up the vLLM model and frees GPU memory."""
         if hasattr(self, "model") and self.model:
             del self.model
         gc.collect()
